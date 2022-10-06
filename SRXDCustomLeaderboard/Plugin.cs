@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Net;
 using System.Threading.Tasks;
 using BepInEx;
@@ -10,7 +11,9 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 
 namespace SRXDCustomLeaderboad {
     [BepInPlugin("SRXDCustomLeaderboard", "SRXDCustomLeaderboard", "0.0.1.0")]
@@ -22,6 +25,9 @@ namespace SRXDCustomLeaderboad {
         public static ConfigEntry<string> authCookie;
         
         public static BepInEx.Logging.ManualLogSource Log;
+
+        public static LeaderboardResult leaderboard;
+        
         private void Awake()
         {
             // Plugin startup logic
@@ -31,7 +37,7 @@ namespace SRXDCustomLeaderboad {
             baseUri = Config.Bind(
                 "General", 
                 "LeaderboardsServerUri",
-                "http://192.168.0.14:3000/api/client",
+                "http://192.168.0.14:3000/api/leaderboard",
                 "Custom Leaderboards Server Uri"
             );
             authCookie = Config.Bind(
@@ -59,9 +65,18 @@ namespace SRXDCustomLeaderboad {
         private class LeaderboardPatches
         {
             [HarmonyPatch(typeof(Player_Steam), nameof(Player_Steam.DownloadLeaderboard))]
-            [HarmonyPostfix]
-            static void dlLeaderboardPost(string id, LeaderboardResult leaderboardToFill) {
-                Log.LogInfo($"{id}, {JsonUtility.ToJson(leaderboardToFill)}");
+            [HarmonyPrefix]
+            static bool dlLeaderboardPre(string id, ref LeaderboardResult leaderboardToFill)
+            {
+                leaderboard = leaderboardToFill;
+                
+                Post("/submission/get", JsonUtility.ToJson(leaderboardToFill)).ContinueWith(e =>
+                {
+                    JsonUtility.FromJsonOverwrite(e.Result, leaderboard);
+                    leaderboard.State = LeaderboardResult.RequestState.Success;
+                });
+                
+                return !enabled.Value;
             }
              
             // look into  SubmitTrackLeaderboard on how metadata is created LeaderboardSubmissionMetaData
@@ -71,22 +86,23 @@ namespace SRXDCustomLeaderboad {
                 if (enabled.Value)
                 {
                     Log.LogInfo($"{key}, {JsonUtility.ToJson(submission)}");
-                    Task.Run(async () => await Submit(JsonUtility.ToJson(submission)));
+                    Task.Run(async () => await Post("/submission/submit", JsonUtility.ToJson(submission)));
                     // LeaderboardSubmissionMetaData: metadata field: [health, buildNumber, exeRevisionNumber, tracklistSize, _progress, score ^ 148089795, trackDataVersion, streak, fullComboState, tiebreakerScore]
                 }
                 return enabledSteam.Value;
             }
             
-            static async Task Submit(string body)
+            static async Task<string> Post(string path, string body)
             {   
                 using (var handler = new HttpClientHandler() { UseCookies = false })
                 using (var client = new HttpClient(handler))
                 {
                     client.DefaultRequestHeaders.Add("Cookie", $"next-auth.session-token={authCookie.Value}");
                     var content = new StringContent(body, Encoding.UTF8, "application/json");
-                    var result = await client.PostAsync($"{baseUri.Value}/submit", content);
+                    var result = await client.PostAsync($"{baseUri.Value}{path}", content);
                     string resultContent = await result.Content.ReadAsStringAsync();
                     Log.LogInfo(resultContent);
+                    return resultContent;
                 }
             }
         }
