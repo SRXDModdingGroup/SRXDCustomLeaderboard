@@ -16,17 +16,17 @@ using System.Text;
 using System.Threading;
 
 namespace SRXDCustomLeaderboad {
-    [BepInPlugin("SRXDCustomLeaderboard", "SRXDCustomLeaderboard", "0.0.1.0")]
+    [BepInPlugin("SRXD.CustomLeaderboard", "SRXDCustomLeaderboard", "0.0.1.0")]
     public class Plugin : BaseUnityPlugin
     {
-        public static ConfigEntry<bool> enabled;
-        public static ConfigEntry<bool> enabledSteam;
-        public static ConfigEntry<string> baseUri;
-        public static ConfigEntry<string> authCookie;
+        private static ConfigEntry<bool> enabled;
+        private static ConfigEntry<bool> enabledSteam;
+        private static ConfigEntry<string> baseUri;
+        private static ConfigEntry<string> authCookie;
         
-        public static BepInEx.Logging.ManualLogSource Log;
+        private static BepInEx.Logging.ManualLogSource Log;
 
-        public static LeaderboardResult leaderboard;
+        private static LeaderboardResult leaderboard;
         
         private void Awake()
         {
@@ -36,30 +36,36 @@ namespace SRXDCustomLeaderboad {
             
             baseUri = Config.Bind(
                 "General", 
-                "LeaderboardsServerUri",
-                "http://192.168.0.14:3000/api/leaderboard",
+                "LeaderboardServerUri",
+                "https://srxdcustomleaderboard.vercel.app/api/leaderboard",
                 "Custom Leaderboards Server Uri"
             );
             authCookie = Config.Bind(
                 "General", 
-                "LeaderboardsServerAuthCookie",
-                "CLIENT-b6acc9e7e6b1f940e09d33125c494ff5",
+                "LeaderboardServerAuthCookie",
+                "CLIENT-enterTokenHere",
                 "Custom Leaderboards Server Authentication Cookie"
             );
             enabled = Config.Bind(
                 "General.Toggles", 
-                "EnableCustomLeaderboards",
+                "EnableCustomLeaderboard",
                 true,
                 "Enable Submitting to Custom Leaderboards"
             );
             enabledSteam = Config.Bind(
                 "General.Toggles", 
-                "EnableSteamLeaderboards",
+                "EnableSteamLeaderboard",
                 true,
                 "Enable Submitting to Steam Leaderboards"
             );
 
+            
             Harmony.CreateAndPatchAll(typeof(LeaderboardPatches));
+
+            if (authCookie.Value == authCookie.DefaultValue.ToString())
+            {
+                Log.LogWarning("The LeaderboardServerAuthCookie is invalid, please visit https://srxdcustomleaderboard.vercel.app/ to create one.");
+            }
         }
 
         private class LeaderboardPatches
