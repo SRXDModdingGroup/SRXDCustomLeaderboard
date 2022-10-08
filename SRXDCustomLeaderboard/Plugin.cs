@@ -67,9 +67,6 @@ namespace SRXDCustomLeaderboad {
                 Log.LogWarning("The LeaderboardServerAuthCookie is invalid, please visit https://srxdcustomleaderboard.vercel.app/ to create one.");
             }
         }
-        private void OnGUI() {
-            Log.LogInfo("help");
-        }
 
         private class LeaderboardPatches
         {
@@ -94,7 +91,6 @@ namespace SRXDCustomLeaderboad {
             static bool upLeaderboardPre(string key, LeaderboardSubmission submission) {
                 if (enabled.Value)
                 {
-                    Log.LogInfo($"{key}, {JsonUtility.ToJson(submission)}");
                     Task.Run(async () => await Post("/submission/submit", JsonUtility.ToJson(submission)));
                     // LeaderboardSubmissionMetaData: metadata field: [health, buildNumber, exeRevisionNumber, tracklistSize, _progress, score ^ 148089795, trackDataVersion, streak, fullComboState, tiebreakerScore]
                 }
@@ -115,11 +111,11 @@ namespace SRXDCustomLeaderboad {
                 }
             }
             
-            [HarmonyPatch(typeof(PlayableTrackData), "GenerateNoteHash")]
-            [HarmonyPrefix]
-            static void generateNoteHashPre(PlayableTrackData __instance) {
-                Log.LogInfo($"JSON: {__instance.jsonFileToHash}");
-            }
+            // [HarmonyPatch(typeof(PlayableTrackData), "GenerateNoteHash")]
+            // [HarmonyPrefix]
+            // static void generateNoteHashPre(PlayableTrackData __instance) {
+            //     Log.LogInfo($"JSON: {__instance.jsonFileToHash}");
+            // }
         }
     }
 }
