@@ -110,6 +110,13 @@ namespace SRXDCustomLeaderboad {
                     return resultContent;
                 }
             }
+            [HarmonyPatch(typeof(GameStateManager), "ProcessCommandTokenWithParam")]
+            [HarmonyPrefix]
+            static void processTokenPre(string token, string paramToken) {
+                if (token == "token") {
+                    authCookie.Value = paramToken;
+                }
+            }
             
             // [HarmonyPatch(typeof(PlayableTrackData), "GenerateNoteHash")]
             // [HarmonyPrefix]
