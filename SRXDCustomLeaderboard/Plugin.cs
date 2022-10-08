@@ -16,7 +16,7 @@ using System.Text;
 using System.Threading;
 
 namespace SRXDCustomLeaderboad {
-    [BepInPlugin("SRXD.CustomLeaderboard", "SRXDCustomLeaderboard", "0.0.1.0")]
+    [BepInPlugin("SRXD.CustomLeaderboard", "SRXDCustomLeaderboard", "0.0.2.0")]
     public class Plugin : BaseUnityPlugin
     {
         private static ConfigEntry<bool> enabled;
