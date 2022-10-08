@@ -114,7 +114,7 @@ namespace SRXDCustomLeaderboad {
             [HarmonyPrefix]
             static void processTokenPre(string token, string paramToken) {
                 if (token == "token") {
-                    authCookie.Value = paramToken;
+                    authCookie.SetSerializedValue(paramToken);
                 }
             }
             
