@@ -67,6 +67,9 @@ namespace SRXDCustomLeaderboad {
                 Log.LogWarning("The LeaderboardServerAuthCookie is invalid, please visit https://srxdcustomleaderboard.vercel.app/ to create one.");
             }
         }
+        private void OnGUI() {
+            Log.LogInfo("help");
+        }
 
         private class LeaderboardPatches
         {
@@ -110,6 +113,12 @@ namespace SRXDCustomLeaderboad {
                     Log.LogInfo(resultContent);
                     return resultContent;
                 }
+            }
+            
+            [HarmonyPatch(typeof(PlayableTrackData), "GenerateNoteHash")]
+            [HarmonyPrefix]
+            static void generateNoteHashPre(PlayableTrackData __instance) {
+                Log.LogInfo($"JSON: {__instance.jsonFileToHash}");
             }
         }
     }
